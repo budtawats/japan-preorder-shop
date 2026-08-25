@@ -136,6 +136,37 @@ export default function AdminCustomersPage() {
     }
   };
 
+  // Toggle item purchased in customer modal
+  const handleToggleItemPurchased = async (order: Order, itemIndex: number) => {
+    const updatedItems = order.items.map((it, idx) =>
+      idx === itemIndex ? { ...it, isPurchased: !it.isPurchased } : it
+    );
+
+    // Optimistically update selectedCustomer and customers list
+    if (selectedCustomer) {
+      const updatedOrders = selectedCustomer.orders.map((o) =>
+        o.id === order.id ? { ...o, items: updatedItems } : o
+      );
+      setSelectedCustomer({
+        ...selectedCustomer,
+        orders: updatedOrders,
+      });
+    }
+
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: updatedItems }),
+      });
+      if (!res.ok) throw new Error('อัปเดตสถานะสินค้าไม่สำเร็จ');
+      fetchCustomers();
+    } catch (err: any) {
+      alert(err.message || 'เกิดข้อผิดพลาดในการบันทึกสถานะสินค้า');
+      fetchCustomers();
+    }
+  };
+
   // Filter customers by search
   const filteredCustomers = customers.filter((c) => {
     const q = search.toLowerCase();
@@ -584,41 +615,111 @@ export default function AdminCustomersPage() {
 
                         {/* Items in this Order */}
                         <div className="space-y-2">
-                          <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            รายการสินค้าที่ลูกค้าสั่งซื้อ ({order.items.length} รายการ):
-                          </h4>
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                              รายการสินค้าที่ลูกค้าสั่งซื้อ ({order.items.length} รายการ):
+                            </h4>
+                            <span className="text-[10px] text-gray-400">
+                              (คลิกเพื่อติ๊กซื้อแล้ว)
+                            </span>
+                          </div>
+
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {order.items.map((item, idx) => (
                               <div
                                 key={idx}
-                                className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-xl border border-slate-100"
+                                className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all ${
+                                  item.isPurchased
+                                    ? 'bg-emerald-50/80 border-emerald-200'
+                                    : 'bg-slate-50 border-slate-100'
+                                }`}
                               >
+                                {/* Checkbox button */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleItemPurchased(order, idx)}
+                                  className={`w-6 h-6 rounded-lg border transition-all flex items-center justify-center shrink-0 ${
+                                    item.isPurchased
+                                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                                      : 'bg-white text-gray-400 border-gray-300 hover:border-emerald-500 hover:text-emerald-500'
+                                  }`}
+                                  title={item.isPurchased ? 'ซื้อแล้ว (คลิกเพื่อยกเลิก)' : 'คลิกเมื่อซื้อสินค้านี้แล้ว'}
+                                >
+                                  <Check className={`w-3.5 h-3.5 ${item.isPurchased ? 'stroke-[3]' : ''}`} />
+                                </button>
+
                                 {item.imageUrl ? (
                                   <img
                                     src={item.imageUrl}
                                     alt={item.productName}
-                                    className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
+                                    className={`w-11 h-11 rounded-lg object-cover border border-gray-200 shrink-0 ${
+                                      item.isPurchased ? 'opacity-80' : ''
+                                    }`}
                                   />
                                 ) : (
-                                  <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center text-xs text-gray-400 shrink-0">
+                                  <div className="w-11 h-11 rounded-lg bg-gray-200 flex items-center justify-center text-xs text-gray-400 shrink-0">
                                     📦
                                   </div>
                                 )}
+
                                 <div className="overflow-hidden flex-1">
-                                  <h5 className="font-bold text-xs text-gray-900 truncate">
+                                  <h5
+                                    className={`font-bold text-xs truncate ${
+                                      item.isPurchased ? 'line-through text-gray-400' : 'text-gray-900'
+                                    }`}
+                                  >
                                     {item.productName}
                                   </h5>
                                   <p className="text-[11px] text-gray-500">
                                     จำนวน: <span className="font-bold text-gray-900">x{item.quantity}</span> • ฿{item.price.toLocaleString()}/ชิ้น
                                   </p>
                                 </div>
-                                <span className="text-xs font-bold text-rose-600 shrink-0">
-                                  ฿{(item.price * item.quantity).toLocaleString()}
-                                </span>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleItemPurchased(order, idx)}
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 transition-colors ${
+                                    item.isPurchased
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {item.isPurchased ? '✓ ซื้อแล้ว' : '⏳ รอซื้อ'}
+                                </button>
                               </div>
                             ))}
                           </div>
                         </div>
+
+                        {/* All Items Purchased Banner & Confirm Ready To Ship Button */}
+                        {order.items.length > 0 &&
+                          order.items.every((i) => i.isPurchased) &&
+                          order.status !== 'shipped' &&
+                          order.status !== 'completed' &&
+                          order.status !== 'cancelled' && (
+                            <div className="p-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 rounded-2xl text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 border border-emerald-400">
+                              <div className="flex items-center gap-2.5 text-xs">
+                                <span className="text-xl">🎉</span>
+                                <div>
+                                  <p className="font-black text-sm text-white">
+                                    ซื้อสินค้าครบทุกชิ้นแล้ว! (100%)
+                                  </p>
+                                  <p className="text-[11px] text-emerald-100 font-medium">
+                                    พร้อมแพ็กและจัดส่งพัสดุให้ลูกค้ารายนี้
+                                  </p>
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => handleStatusChange(order.id, 'shipped')}
+                                className="px-4 py-2 bg-white hover:bg-emerald-50 text-emerald-700 rounded-xl text-xs font-black shadow-md transition-all active:scale-95 shrink-0 flex items-center gap-1.5"
+                              >
+                                <Truck className="w-4 h-4 text-emerald-600" />
+                                <span>คอนเฟิร์มออเดอร์พร้อมส่ง 🚚</span>
+                              </button>
+                            </div>
+                          )}
 
                         {/* Order Footer: Payment Slip & Total Summary */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-gray-100 gap-2 text-xs">

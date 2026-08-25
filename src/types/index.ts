@@ -94,6 +94,7 @@ export interface OrderItem {
   price: number;
   quantity: number;
   imageUrl: string;
+  isPurchased?: boolean;
 }
 
 export type OrderStatus =
