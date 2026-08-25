@@ -20,9 +20,11 @@ import {
   MapPin,
   Trash2,
   Check,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function AdminOrdersPage() {
+  const [mounted, setMounted] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,6 +69,7 @@ export default function AdminOrdersPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     fetchOrders();
   }, []);
 
@@ -173,6 +176,14 @@ export default function AdminOrdersPage() {
     return matchStatus && matchSearch;
   });
 
+  if (!mounted) {
+    return (
+      <AdminLayout>
+        <div className="py-16 text-center text-gray-400">กำลังโหลดระบบคำสั่งซื้อ...</div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -190,9 +201,10 @@ export default function AdminOrdersPage() {
 
           <button
             onClick={fetchOrders}
-            className="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-bold shadow-2xs transition-colors self-start sm:self-auto"
+            className="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-bold shadow-2xs transition-colors self-start sm:self-auto flex items-center gap-1.5"
           >
-            🔄 รีเฟรชรายการ
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>รีเฟรชรายการ</span>
           </button>
         </div>
 
@@ -238,7 +250,7 @@ export default function AdminOrdersPage() {
         {/* Orders Table / Cards */}
         {loading ? (
           <div className="space-y-4">
-            {[...Array(4)].map((_, i) => (
+            {[...Array(3)].map((_, i) => (
               <div key={i} className="bg-white rounded-3xl p-6 border border-gray-100 animate-pulse h-36" />
             ))}
           </div>
@@ -254,6 +266,13 @@ export default function AdminOrdersPage() {
               const orderItems = Array.isArray(order.items) ? order.items : [];
               const allItemsPurchased =
                 orderItems.length > 0 && orderItems.every((i) => Boolean(i.isPurchased));
+
+              let dateDisplay = '';
+              try {
+                dateDisplay = new Date(order.createdAt).toLocaleString('th-TH');
+              } catch (e) {
+                dateDisplay = order.createdAt;
+              }
 
               return (
                 <div
@@ -272,7 +291,7 @@ export default function AdminOrdersPage() {
                           {order.orderNumber}
                         </span>
                         <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">
-                          {new Date(order.createdAt).toLocaleString('th-TH')}
+                          {dateDisplay}
                         </span>
                         <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded font-semibold">
                           {order.flightRoundName || 'รอบบินญี่ปุ่น'}
