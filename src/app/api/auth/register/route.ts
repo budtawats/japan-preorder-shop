@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     };
 
     db.users.push(newUser);
-    writeDb(db);
+    await writeDb(db);
 
     const token = signToken(newUser);
     const { passwordHash: _, ...safeUser } = newUser;

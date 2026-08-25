@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
     // Update password
     db.users[userIndex].passwordHash = bcrypt.hashSync(newPassword, 10);
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({
       success: true,

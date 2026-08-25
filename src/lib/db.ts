@@ -297,7 +297,6 @@ export function readDb(): DatabaseData {
 }
 
 export async function readDbAsync(): Promise<DatabaseData> {
-  // Try fetching fresh data from Cloudflare D1 first
   try {
     const res = await fetch(CLOUDFLARE_D1_API, {
       method: 'GET',
@@ -307,7 +306,6 @@ export async function readDbAsync(): Promise<DatabaseData> {
     if (res.ok) {
       const data: DatabaseData = await res.json();
       if (data && data.users && data.users.length > 0) {
-        // Cache to local file
         try {
           fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
         } catch (e) {}
@@ -321,21 +319,24 @@ export async function readDbAsync(): Promise<DatabaseData> {
   return readDb();
 }
 
-export function writeDb(data: DatabaseData): void {
+export async function writeDb(data: DatabaseData): Promise<void> {
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
   } catch (error) {
     console.error('Error writing local DB:', error);
   }
 
-  // Push updates to Cloudflare D1 asynchronously
+  // Await push to Cloudflare D1 so serverless function never terminates early
   try {
-    fetch(CLOUDFLARE_D1_API, {
+    const res = await fetch(CLOUDFLARE_D1_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    }).catch((e) => console.warn('D1 write sync error:', e));
+    });
+    if (!res.ok) {
+      console.warn('D1 write sync returned status:', res.status);
+    }
   } catch (err) {
-    // Ignore async error
+    console.warn('D1 write sync network error:', err);
   }
 }

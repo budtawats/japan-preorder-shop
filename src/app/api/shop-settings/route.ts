@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       ...body,
     };
 
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({ success: true, shopSettings: db.shopSettings });
   } catch (error: any) {

@@ -71,7 +71,7 @@ export async function PUT(request: Request) {
     }
 
     db.users[userIndex] = user;
-    writeDb(db);
+    await writeDb(db);
 
     const { passwordHash, ...safeUser } = user;
 

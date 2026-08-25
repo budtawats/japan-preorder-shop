@@ -158,7 +158,7 @@ export async function POST(request: Request) {
     };
 
     db.orders.unshift(newOrder);
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({ success: true, order: newOrder });
   } catch (error: any) {

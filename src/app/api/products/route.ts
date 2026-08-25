@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     };
 
     db.products.unshift(newProduct);
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({ success: true, product: newProduct });
   } catch (error: any) {
