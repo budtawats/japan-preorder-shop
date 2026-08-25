@@ -22,7 +22,7 @@ export async function GET(
   }
 }
 
-// PUT update order (Status, Tracking Number, Payment Slip)
+// PUT update order (Status, Tracking Number, Payment Slip, Items)
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
@@ -54,7 +54,7 @@ export async function PUT(
       }
     }
 
-    // Merchant can update any fields (status, trackingNumber, notes)
+    // Merchant can update any fields (status, trackingNumber, notes, items)
     if (user?.role === 'merchant') {
       db.orders[orderIndex] = {
         ...currentOrder,
@@ -66,6 +66,34 @@ export async function PUT(
     }
 
     return NextResponse.json({ error: 'ไม่มีสิทธิ์แก้ไขคำสั่งซื้อนี้' }, { status: 403 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// DELETE order (Admin only)
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== 'merchant') {
+      return NextResponse.json({ error: 'สงวนสิทธิ์สำหรับแม่ค้าเท่านั้น' }, { status: 403 });
+    }
+
+    const { id } = params;
+    const db = await readDbAsync();
+
+    const orderIndex = db.orders.findIndex((o) => o.id === id || o.orderNumber === id);
+    if (orderIndex === -1) {
+      return NextResponse.json({ error: 'ไม่พบคำสั่งซื้อนี้' }, { status: 404 });
+    }
+
+    db.orders.splice(orderIndex, 1);
+    await writeDb(db);
+
+    return NextResponse.json({ success: true, message: 'ลบคำสั่งซื้อเรียบร้อยแล้ว' });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

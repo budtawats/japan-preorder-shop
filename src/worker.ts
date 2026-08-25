@@ -49,6 +49,9 @@ export default {
           if (body.users) {
             statements.push(env.DB.prepare("DELETE FROM users WHERE role = 'customer';"));
           }
+          if (body.orders) {
+            statements.push(env.DB.prepare('DELETE FROM orders;'));
+          }
 
           // 2. INSERT PARENT TABLES (Categories)
           if (body.categories && Array.isArray(body.categories)) {
@@ -209,7 +212,7 @@ export default {
             for (const o of body.orders) {
               statements.push(
                 env.DB.prepare(`
-                  INSERT OR REPLACE INTO orders (id, order_number, user_id, customer_name, customer_phone, customer_line_id, shipping_address, items_json, subtotal, discount, shipping_fee, total_amount, payment_slip_url, status, tracking_number, flight_round_id, flight_round_name, note, created_at, updated_at)
+                  INSERT INTO orders (id, order_number, user_id, customer_name, customer_phone, customer_line_id, shipping_address, items_json, subtotal, discount, shipping_fee, total_amount, payment_slip_url, status, tracking_number, flight_round_id, flight_round_name, note, created_at, updated_at)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `).bind(
                   o.id,

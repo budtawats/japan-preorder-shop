@@ -18,6 +18,7 @@ import {
   Phone,
   MessageSquare,
   MapPin,
+  Trash2,
 } from 'lucide-react';
 
 export default function AdminOrdersPage() {
@@ -121,6 +122,30 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleDeleteOrder = async (order: Order) => {
+    if (
+      !confirm(
+        `คุณต้องการลบคำสั่งซื้อ #${order.orderNumber} ของคุณ "${order.customerName}" ออกจากระบบอย่างถาวรหรือไม่?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setOrders((prev) => prev.filter((o) => o.id !== order.id));
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'ลบคำสั่งซื้อไม่สำเร็จ');
+
+      fetchOrders();
+    } catch (err: any) {
+      alert(err.message || 'เกิดข้อผิดพลาดในการลบคำสั่งซื้อ');
+      fetchOrders();
+    }
+  };
+
   const filteredOrders = orders.filter((order) => {
     const matchStatus = statusFilter === 'all' || order.status === statusFilter;
     const matchSearch =
@@ -178,6 +203,7 @@ export default function AdminOrdersPage() {
               { key: 'paid', label: 'ชำระแล้ว', count: orders.filter((o) => o.status === 'paid').length },
               { key: 'purchased', label: 'ซื้อของแล้ว 🇯🇵', count: orders.filter((o) => o.status === 'purchased').length },
               { key: 'shipped', label: 'จัดส่งแล้ว 🚚', count: orders.filter((o) => o.status === 'shipped').length },
+              { key: 'cancelled', label: 'ยกเลิกแล้ว ❌', count: orders.filter((o) => o.status === 'cancelled').length },
             ].map((st) => (
               <button
                 key={st.key}
@@ -212,9 +238,13 @@ export default function AdminOrdersPage() {
             {filteredOrders.map((order) => (
               <div
                 key={order.id}
-                className="bg-white rounded-3xl p-5 sm:p-6 border border-rose-100 shadow-sm hover:shadow-md transition-shadow space-y-4"
+                className={`bg-white rounded-3xl p-5 sm:p-6 border transition-shadow space-y-4 ${
+                  order.status === 'cancelled'
+                    ? 'border-red-200 bg-red-50/20 opacity-90'
+                    : 'border-rose-100 shadow-sm hover:shadow-md'
+                }`}
               >
-                {/* Top: Order Info & Status Selector */}
+                {/* Top: Order Info & Status Selector & Delete Button */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -227,10 +257,15 @@ export default function AdminOrdersPage() {
                       <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded font-semibold">
                         {order.flightRoundName || 'รอบบินญี่ปุ่น'}
                       </span>
+                      {order.status === 'cancelled' && (
+                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold">
+                          ❌ ยกเลิกคำสั่งซื้อแล้ว
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Status Dropdown */}
+                  {/* Status Dropdown & Delete Order Action */}
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-400">สถานะ:</span>
                     <select
@@ -245,6 +280,8 @@ export default function AdminOrdersPage() {
                           ? 'bg-purple-50 text-purple-800 border-purple-300'
                           : order.status === 'shipped'
                           ? 'bg-emerald-100 text-emerald-900 border-emerald-400'
+                          : order.status === 'cancelled'
+                          ? 'bg-red-50 text-red-800 border-red-300'
                           : 'bg-gray-50 text-gray-800 border-gray-300'
                       }`}
                     >
@@ -255,6 +292,20 @@ export default function AdminOrdersPage() {
                       <option value="shipped">🚚 จัดส่งพัสดุแล้ว</option>
                       <option value="cancelled">❌ ยกเลิกออเดอร์</option>
                     </select>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteOrder(order)}
+                      className={`p-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 ${
+                        order.status === 'cancelled'
+                          ? 'bg-red-100 hover:bg-red-200 text-red-700 px-2.5 border border-red-200'
+                          : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                      }`}
+                      title="ลบคำสั่งซื้อนี้ออกจากระบบอย่างถาวร"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                      {order.status === 'cancelled' && <span>ลบออเดอร์นี้</span>}
+                    </button>
                   </div>
                 </div>
 
