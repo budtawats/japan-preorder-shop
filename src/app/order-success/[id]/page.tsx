@@ -230,23 +230,40 @@ export default function OrderSuccessPage() {
 
         <div className="divide-y divide-gray-100">
           {order.items.map((item, idx) => (
-            <div key={idx} className="py-3 flex items-center justify-between gap-4 text-xs sm:text-sm">
+            <div
+              key={idx}
+              className={`py-3.5 px-3 rounded-2xl flex items-center justify-between gap-4 text-xs sm:text-sm transition-all ${
+                item.isPurchased ? 'bg-emerald-50/60' : ''
+              }`}
+            >
               <div className="flex items-center gap-3">
                 <img
                   src={item.imageUrl}
                   alt={item.productName}
-                  className="w-14 h-14 rounded-xl object-cover bg-gray-50 shrink-0"
+                  className="w-14 h-14 rounded-xl object-cover bg-white border border-gray-100 shrink-0"
                 />
                 <div>
-                  <p className="font-semibold text-gray-900">{item.productName}</p>
+                  <p className="font-bold text-gray-900">{item.productName}</p>
                   <p className="text-gray-400 text-xs">
                     ฿{item.price.toLocaleString()} × {item.quantity} ชิ้น
                   </p>
                 </div>
               </div>
-              <span className="font-bold text-gray-900 shrink-0">
-                ฿{(item.price * item.quantity).toLocaleString()}
-              </span>
+
+              <div className="text-right shrink-0">
+                <span className="font-black text-gray-900 block text-sm">
+                  ฿{(item.price * item.quantity).toLocaleString()}
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full mt-1.5 ${
+                    item.isPurchased
+                      ? 'bg-emerald-600 text-white shadow-2xs'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {item.isPurchased ? '✓ ซื้อของแล้ว 🇯🇵' : '⏳ รอแม่ค้าไปซื้อ'}
+                </span>
+              </div>
             </div>
           ))}
         </div>

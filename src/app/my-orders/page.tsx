@@ -188,29 +188,67 @@ export default function MyOrdersPage() {
                   </div>
                 )}
 
-                {/* Items List */}
+                {/* Items List with Live Item-by-Item Purchase Status */}
                 <div className="space-y-2.5">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    <span>รายการสินค้า ({order.items.length} รายการ)</span>
+                    <span>สถานะสินค้า</span>
+                  </div>
+
                   {order.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-xs py-1">
+                    <div
+                      key={idx}
+                      className={`flex items-center justify-between text-xs p-2.5 rounded-2xl border transition-all ${
+                        item.isPurchased
+                          ? 'bg-emerald-50/60 border-emerald-200/80'
+                          : 'bg-gray-50/50 border-gray-100'
+                      }`}
+                    >
                       <div className="flex items-center gap-3">
                         <img
                           src={item.imageUrl}
                           alt={item.productName}
-                          className="w-10 h-10 rounded-lg object-cover bg-gray-50 shrink-0"
+                          className="w-11 h-11 rounded-xl object-cover bg-white border border-gray-100 shrink-0"
                         />
                         <div>
-                          <p className="font-semibold text-gray-800">{item.productName}</p>
-                          <p className="text-gray-400">
+                          <p className="font-bold text-gray-900">{item.productName}</p>
+                          <p className="text-gray-400 text-[11px]">
                             ฿{item.price.toLocaleString()} × {item.quantity} ชิ้น
                           </p>
                         </div>
                       </div>
-                      <span className="font-bold text-gray-900">
-                        ฿{(item.price * item.quantity).toLocaleString()}
-                      </span>
+
+                      <div className="text-right shrink-0">
+                        <span className="font-black text-gray-900 block text-xs">
+                          ฿{(item.price * item.quantity).toLocaleString()}
+                        </span>
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 ${
+                            item.isPurchased
+                              ? 'bg-emerald-600 text-white shadow-2xs'
+                              : 'bg-gray-200/80 text-gray-600'
+                          }`}
+                        >
+                          {item.isPurchased ? '✓ ซื้อของแล้ว 🇯🇵' : '⏳ รอแม่ค้าไปซื้อ'}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
+
+                {/* All items purchased celebration banner */}
+                {order.items.length > 0 &&
+                  order.items.every((i) => i.isPurchased) &&
+                  order.status !== 'shipped' &&
+                  order.status !== 'completed' &&
+                  order.status !== 'cancelled' && (
+                    <div className="p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl flex items-center gap-2.5 text-xs text-emerald-800 font-bold animate-fadeIn">
+                      <span className="text-base">🎉</span>
+                      <span>
+                        แม่ค้าซื้อสินค้าของคุณครบทุกชิ้นแล้ว! กำลังเตรียมแพ็กและส่งมอบตามรอบบินครับ
+                      </span>
+                    </div>
+                  )}
 
                 {/* Footer / Actions */}
                 <div className="border-t border-gray-100 pt-3 flex flex-wrap items-center justify-between gap-3 text-xs">
