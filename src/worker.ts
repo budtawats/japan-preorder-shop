@@ -25,185 +25,221 @@ export default {
       if (url.pathname === '/api/db/sync') {
         if (request.method === 'POST') {
           const body: any = await request.json();
+          const statements: any[] = [];
 
-          // 1. USERS SYNC
+          // 1. DELETE DEPENDENT TABLES FIRST (To respect Foreign Keys)
+          if (body.products) {
+            statements.push(env.DB.prepare('DELETE FROM products;'));
+          }
+          if (body.categories) {
+            statements.push(env.DB.prepare('DELETE FROM categories;'));
+          }
+          if (body.flightRounds) {
+            statements.push(env.DB.prepare('DELETE FROM flight_rounds;'));
+          }
+          if (body.promotions) {
+            statements.push(env.DB.prepare('DELETE FROM promotions;'));
+          }
+          if (body.paymentSettings) {
+            statements.push(env.DB.prepare('DELETE FROM payment_settings;'));
+          }
+          if (body.shopSettings) {
+            statements.push(env.DB.prepare('DELETE FROM shop_settings;'));
+          }
+
+          // 2. INSERT PARENT TABLES (Categories)
+          if (body.categories && Array.isArray(body.categories)) {
+            for (const c of body.categories) {
+              statements.push(
+                env.DB.prepare(`
+                  INSERT INTO categories (id, name, description, icon, display_order)
+                  VALUES (?, ?, ?, ?, ?)
+                `).bind(
+                  c.id,
+                  c.name || '',
+                  c.description || '',
+                  c.icon || '🛍️',
+                  c.displayOrder || 1
+                )
+              );
+            }
+          }
+
+          // 3. INSERT CHILD TABLES (Products)
+          if (body.products && Array.isArray(body.products)) {
+            for (const p of body.products) {
+              statements.push(
+                env.DB.prepare(`
+                  INSERT INTO products (id, name, category_id, price, original_price, description, image_url, in_stock, stock_status, is_promo, promo_tag, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).bind(
+                  p.id,
+                  p.name || '',
+                  p.categoryId || 'cat_snacks',
+                  Number(p.price) || 0,
+                  p.originalPrice ? Number(p.originalPrice) : null,
+                  p.description || '',
+                  p.imageUrl || '',
+                  p.inStock ? 1 : 0,
+                  p.stockStatus || (p.inStock ? 'preorder' : 'out_of_stock'),
+                  p.isPromo ? 1 : 0,
+                  p.promoTag || '',
+                  p.createdAt || new Date().toISOString()
+                )
+              );
+            }
+          }
+
+          // 4. USERS SYNC
           if (body.users && Array.isArray(body.users)) {
             for (const u of body.users) {
-              await env.DB.prepare(`
-                INSERT OR REPLACE INTO users (id, username, password_hash, role, full_name, phone, line_id, address, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `).bind(
-                u.id,
-                u.username,
-                u.passwordHash || u.password_hash || '',
-                u.role || 'customer',
-                u.fullName || u.full_name || '',
-                u.phone || '',
-                u.lineId || u.line_id || '',
-                u.address || '',
-                u.createdAt || u.created_at || new Date().toISOString()
-              ).run();
+              statements.push(
+                env.DB.prepare(`
+                  INSERT OR REPLACE INTO users (id, username, password_hash, role, full_name, phone, line_id, address, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).bind(
+                  u.id,
+                  u.username,
+                  u.passwordHash || u.password_hash || '',
+                  u.role || 'customer',
+                  u.fullName || u.full_name || '',
+                  u.phone || '',
+                  u.lineId || u.line_id || '',
+                  u.address || '',
+                  u.createdAt || u.created_at || new Date().toISOString()
+                )
+              );
             }
           }
 
-          // 2. CATEGORIES SYNC
-          if (body.categories && Array.isArray(body.categories)) {
-            await env.DB.prepare('DELETE FROM categories').run();
-            for (const c of body.categories) {
-              await env.DB.prepare(`
-                INSERT INTO categories (id, name, description, icon, display_order)
-                VALUES (?, ?, ?, ?, ?)
-              `).bind(
-                c.id,
-                c.name || '',
-                c.description || '',
-                c.icon || '🛍️',
-                c.displayOrder || 1
-              ).run();
-            }
-          }
-
-          // 3. PRODUCTS SYNC
-          if (body.products && Array.isArray(body.products)) {
-            await env.DB.prepare('DELETE FROM products').run();
-            for (const p of body.products) {
-              await env.DB.prepare(`
-                INSERT INTO products (id, name, category_id, price, original_price, description, image_url, in_stock, stock_status, is_promo, promo_tag, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `).bind(
-                p.id,
-                p.name || '',
-                p.categoryId || 'cat_snacks',
-                Number(p.price) || 0,
-                p.originalPrice ? Number(p.originalPrice) : null,
-                p.description || '',
-                p.imageUrl || '',
-                p.inStock ? 1 : 0,
-                p.stockStatus || (p.inStock ? 'preorder' : 'out_of_stock'),
-                p.isPromo ? 1 : 0,
-                p.promoTag || '',
-                p.createdAt || new Date().toISOString()
-              ).run();
-            }
-          }
-
-          // 4. FLIGHT ROUNDS SYNC
+          // 5. FLIGHT ROUNDS SYNC
           if (body.flightRounds && Array.isArray(body.flightRounds)) {
-            await env.DB.prepare('DELETE FROM flight_rounds').run();
             for (const r of body.flightRounds) {
-              await env.DB.prepare(`
-                INSERT INTO flight_rounds (id, round_name, order_close_date, return_date, shipping_start_date, status, note, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-              `).bind(
-                r.id,
-                r.roundName || '',
-                r.orderCloseDate || '',
-                r.returnDate || '',
-                r.shippingStartDate || '',
-                r.status || 'active',
-                r.note || '',
-                r.createdAt || new Date().toISOString()
-              ).run();
+              statements.push(
+                env.DB.prepare(`
+                  INSERT INTO flight_rounds (id, round_name, order_close_date, return_date, shipping_start_date, status, note, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `).bind(
+                  r.id,
+                  r.roundName || '',
+                  r.orderCloseDate || '',
+                  r.returnDate || '',
+                  r.shippingStartDate || '',
+                  r.status || 'active',
+                  r.note || '',
+                  r.createdAt || new Date().toISOString()
+                )
+              );
             }
           }
 
-          // 5. PROMOTIONS SYNC
+          // 6. PROMOTIONS SYNC
           if (body.promotions && Array.isArray(body.promotions)) {
-            await env.DB.prepare('DELETE FROM promotions').run();
             for (const pr of body.promotions) {
-              await env.DB.prepare(`
-                INSERT INTO promotions (id, title, description, banner_url, discount_type, discount_value, code, min_spend, is_active, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `).bind(
-                pr.id,
-                pr.title || '',
-                pr.description || '',
-                pr.bannerUrl || '',
-                pr.discountType || 'fixed',
-                Number(pr.discountValue) || 0,
-                pr.code || '',
-                Number(pr.minSpend) || 0,
-                pr.isActive ? 1 : 0,
-                pr.createdAt || new Date().toISOString()
-              ).run();
+              statements.push(
+                env.DB.prepare(`
+                  INSERT INTO promotions (id, title, description, banner_url, discount_type, discount_value, code, min_spend, is_active, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).bind(
+                  pr.id,
+                  pr.title || '',
+                  pr.description || '',
+                  pr.bannerUrl || '',
+                  pr.discountType || 'fixed',
+                  Number(pr.discountValue) || 0,
+                  pr.code || '',
+                  Number(pr.minSpend) || 0,
+                  pr.isActive ? 1 : 0,
+                  pr.createdAt || new Date().toISOString()
+                )
+              );
             }
           }
 
-          // 6. PAYMENT SETTINGS SYNC
+          // 7. PAYMENT SETTINGS SYNC
           if (body.paymentSettings) {
             const pay = body.paymentSettings;
-            await env.DB.prepare('DELETE FROM payment_settings').run();
-            await env.DB.prepare(`
-              INSERT INTO payment_settings (id, prompt_pay_number, prompt_pay_name, bank_name, account_number, account_name, qr_image_url, note, shipping_fee, free_shipping_min_amount)
-              VALUES ('default', ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `).bind(
-              pay.promptPayNumber || '',
-              pay.promptPayName || '',
-              pay.bankName || '',
-              pay.accountNumber || '',
-              pay.accountName || '',
-              pay.qrImageUrl || '',
-              pay.note || '',
-              Number(pay.shippingFee) || 50,
-              pay.freeShippingMinAmount !== undefined ? Number(pay.freeShippingMinAmount) : 1000
-            ).run();
+            statements.push(
+              env.DB.prepare(`
+                INSERT INTO payment_settings (id, prompt_pay_number, prompt_pay_name, bank_name, account_number, account_name, qr_image_url, note, shipping_fee, free_shipping_min_amount)
+                VALUES ('default', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).bind(
+                pay.promptPayNumber || '',
+                pay.promptPayName || '',
+                pay.bankName || '',
+                pay.accountNumber || '',
+                pay.accountName || '',
+                pay.qrImageUrl || '',
+                pay.note || '',
+                Number(pay.shippingFee) || 50,
+                pay.freeShippingMinAmount !== undefined ? Number(pay.freeShippingMinAmount) : 1000
+              )
+            );
           }
 
-          // 7. SHOP SETTINGS SYNC
+          // 8. SHOP SETTINGS SYNC
           if (body.shopSettings) {
             const s = body.shopSettings;
-            await env.DB.prepare('DELETE FROM shop_settings').run();
-            await env.DB.prepare(`
-              INSERT INTO shop_settings (id, shop_name, tagline, logo_url, theme_color, phone, line_id, line_url, facebook_url, instagram_url, support_hours, shop_address, top_announcement)
-              VALUES ('default', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `).bind(
-              s.shopName || 'KOI Japan Shop',
-              s.tagline || '',
-              s.logoUrl || '',
-              s.themeColor || '#E63946',
-              s.phone || '',
-              s.lineId || '',
-              s.lineUrl || '',
-              s.facebookUrl || '',
-              s.instagramUrl || '',
-              s.supportHours || '',
-              s.shopAddress || '',
-              s.topAnnouncement || ''
-            ).run();
+            statements.push(
+              env.DB.prepare(`
+                INSERT INTO shop_settings (id, shop_name, tagline, logo_url, theme_color, phone, line_id, line_url, facebook_url, instagram_url, support_hours, shop_address, top_announcement)
+                VALUES ('default', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).bind(
+                s.shopName || 'KOI Japan Shop',
+                s.tagline || '',
+                s.logoUrl || '',
+                s.themeColor || '#E63946',
+                s.phone || '',
+                s.lineId || '',
+                s.lineUrl || '',
+                s.facebookUrl || '',
+                s.instagramUrl || '',
+                s.supportHours || '',
+                s.shopAddress || '',
+                s.topAnnouncement || ''
+              )
+            );
           }
 
-          // 8. ORDERS SYNC
+          // 9. ORDERS SYNC
           if (body.orders && Array.isArray(body.orders)) {
             for (const o of body.orders) {
-              await env.DB.prepare(`
-                INSERT OR REPLACE INTO orders (id, order_number, user_id, customer_name, customer_phone, customer_line_id, shipping_address, items_json, subtotal, discount, shipping_fee, total_amount, payment_slip_url, status, tracking_number, flight_round_id, flight_round_name, note, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `).bind(
-                o.id,
-                o.orderNumber,
-                o.userId || null,
-                o.customerName || '',
-                o.customerPhone || '',
-                o.customerLineId || '',
-                o.shippingAddress || '',
-                JSON.stringify(o.items || []),
-                Number(o.subtotal) || 0,
-                Number(o.discount) || 0,
-                Number(o.shippingFee) || 0,
-                Number(o.totalAmount) || 0,
-                o.paymentSlipUrl || null,
-                o.status || 'pending_verification',
-                o.trackingNumber || null,
-                o.flightRoundId || null,
-                o.flightRoundName || null,
-                o.note || '',
-                o.createdAt || new Date().toISOString(),
-                o.updatedAt || new Date().toISOString()
-              ).run();
+              statements.push(
+                env.DB.prepare(`
+                  INSERT OR REPLACE INTO orders (id, order_number, user_id, customer_name, customer_phone, customer_line_id, shipping_address, items_json, subtotal, discount, shipping_fee, total_amount, payment_slip_url, status, tracking_number, flight_round_id, flight_round_name, note, created_at, updated_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).bind(
+                  o.id,
+                  o.orderNumber,
+                  o.userId || null,
+                  o.customerName || '',
+                  o.customerPhone || '',
+                  o.customerLineId || '',
+                  o.shippingAddress || '',
+                  JSON.stringify(o.items || []),
+                  Number(o.subtotal) || 0,
+                  Number(o.discount) || 0,
+                  Number(o.shippingFee) || 0,
+                  Number(o.totalAmount) || 0,
+                  o.paymentSlipUrl || null,
+                  o.status || 'pending_verification',
+                  o.trackingNumber || null,
+                  o.flightRoundId || null,
+                  o.flightRoundName || null,
+                  o.note || '',
+                  o.createdAt || new Date().toISOString(),
+                  o.updatedAt || new Date().toISOString()
+                )
+              );
             }
           }
 
-          return new Response(JSON.stringify({ success: true }), {
+          // Execute everything in a single atomic batch
+          if (statements.length > 0) {
+            await env.DB.batch(statements);
+          }
+
+          return new Response(JSON.stringify({ success: true, count: statements.length }), {
             headers: { 'Content-Type': 'application/json', ...corsHeaders },
           });
         }
