@@ -16,6 +16,10 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  HelpCircle,
+  ExternalLink,
+  KeyRound,
+  X,
 } from 'lucide-react';
 
 export default function AuthPage() {
@@ -41,6 +45,16 @@ export default function AuthPage() {
   const [phone, setPhone] = useState('');
   const [lineId, setLineId] = useState('');
   const [address, setAddress] = useState('');
+
+  // Form states for Forgot Password Modal
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [resetUsername, setResetUsername] = useState('');
+  const [resetPhone, setResetPhone] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [showResetNewPassword, setShowResetNewPassword] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetSuccess, setResetSuccess] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +136,46 @@ export default function AuthPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle Reset Password Submission
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError(null);
+    setResetSuccess(null);
+    setResetLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: resetUsername,
+          phone: resetPhone,
+          newPassword: resetNewPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'รีเซ็ตรหัสผ่านไม่สำเร็จ');
+
+      setResetSuccess(data.message);
+      setLoginUsername(resetUsername);
+      setLoginPassword(resetNewPassword);
+
+      setTimeout(() => {
+        setShowForgotModal(false);
+        setResetSuccess(null);
+        setResetUsername('');
+        setResetPhone('');
+        setResetNewPassword('');
+        setSuccessMsg('รีเซ็ตรหัสผ่านสำเร็จ กรุณากดเข้าสู่ระบบได้เลยครับ!');
+      }, 2500);
+    } catch (err: any) {
+      setResetError(err.message);
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -235,7 +289,6 @@ export default function AuthPage() {
           {/* A. MERCHANT LOGIN FORM */}
           {role === 'merchant' && (
             <form onSubmit={handleLogin} className="space-y-4">
-
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   Username แม่ค้า
@@ -303,9 +356,23 @@ export default function AuthPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  รหัสผ่าน (Password)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700">
+                    รหัสผ่าน (Password)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotModal(true);
+                      setResetError(null);
+                      setResetSuccess(null);
+                    }}
+                    className="text-xs text-rose-600 hover:text-rose-700 font-semibold hover:underline flex items-center gap-1"
+                  >
+                    <HelpCircle className="w-3.5 h-3.5" />
+                    <span>ลืมรหัสผ่าน?</span>
+                  </button>
+                </div>
                 <div className="relative">
                   <input
                     type={showLoginPassword ? 'text' : 'password'}
@@ -335,13 +402,20 @@ export default function AuthPage() {
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              <div className="text-center pt-2">
+              <div className="flex items-center justify-between text-xs pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(true)}
+                  className="text-gray-500 hover:text-rose-600"
+                >
+                  ลืมรหัสผ่านใช่ไหม?
+                </button>
                 <button
                   type="button"
                   onClick={() => setCustomerMode('register')}
-                  className="text-xs text-rose-600 font-semibold hover:underline"
+                  className="text-rose-600 font-bold hover:underline"
                 >
-                  ยังไม่มีบัญชี? คลิกที่นี่เพื่อสมัครสมาชิก
+                  สมัครสมาชิกใหม่ →
                 </button>
               </div>
             </form>
@@ -477,6 +551,139 @@ export default function AuthPage() {
           )}
         </div>
       </div>
+
+      {/* D. FORGOT PASSWORD MODAL */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-rose-100 relative animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="font-black text-base text-gray-900 flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-rose-600" />
+                <span>ลืมรหัสผ่านเข้าสู่ระบบ</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick LINE Contact Banner */}
+            <div className="bg-emerald-50 border border-emerald-200 p-3.5 rounded-2xl text-xs space-y-2">
+              <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
+                <MessageSquare className="w-4 h-4 text-emerald-600" />
+                <span>วิธีที่สะดวกที่สุด: ติดต่อแม่ค้าเพื่อรีเซ็ต</span>
+              </div>
+              <p className="text-[11px] text-emerald-700 leading-relaxed">
+                คุณสามารถทักแชทหาแม่ค้าเพื่อขอรีเซ็ตรหัสผ่านได้ทันที โดยแจ้งชื่อหรือเบอร์โทรศัพท์ที่ลงทะเบียนไว้
+              </p>
+              <a
+                href="https://line.me/ti/p/~@koijapanshop"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+              >
+                <span>💬 แชทแจ้งแม่ค้าทาง LINE (@koijapanshop)</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-gray-200"></div>
+              <span className="flex-shrink mx-3 text-gray-400 text-[11px] font-medium">หรือรีเซ็ตรหัสผ่านด้วยตนเอง</span>
+              <div className="flex-grow border-t border-gray-200"></div>
+            </div>
+
+            {/* Reset Form Feedback */}
+            {resetError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{resetError}</span>
+              </div>
+            )}
+            {resetSuccess && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 shrink-0" />
+                <span>{resetSuccess}</span>
+              </div>
+            )}
+
+            {/* Self-service Reset Form */}
+            <form onSubmit={handleResetPassword} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">
+                  1. Username ที่ใช้สมัคร <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="เช่น somchai"
+                  value={resetUsername}
+                  onChange={(e) => setResetUsername(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">
+                  2. เบอร์โทรศัพท์ที่ลงทะเบียนไว้ <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="เช่น 089-999-8888"
+                  value={resetPhone}
+                  onChange={(e) => setResetPhone(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">
+                  3. ตั้งรหัสผ่านใหม่ <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showResetNewPassword ? 'text' : 'password'}
+                    required
+                    placeholder="กรอกรหัสผ่านใหม่ที่ต้องการ"
+                    value={resetNewPassword}
+                    onChange={(e) => setResetNewPassword(e.target.value)}
+                    className="w-full pl-3.5 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-rose-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowResetNewPassword(!showResetNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showResetNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-colors"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-700 hover:to-red-600 text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  <span>{resetLoading ? 'กำลังตรวจสอบ...' : 'ยืนยันตั้งรหัสผ่านใหม่'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
