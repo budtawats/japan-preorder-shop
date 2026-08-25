@@ -298,10 +298,12 @@ export function readDb(): DatabaseData {
 
 export async function readDbAsync(): Promise<DatabaseData> {
   try {
-    const res = await fetch(CLOUDFLARE_D1_API, {
+    const res = await fetch(`${CLOUDFLARE_D1_API}?_t=${Date.now()}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       cache: 'no-store',
+      // @ts-ignore
+      next: { revalidate: 0 },
     });
     if (res.ok) {
       const data: DatabaseData = await res.json();
