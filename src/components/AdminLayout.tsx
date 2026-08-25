@@ -31,6 +31,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: '/admin', label: 'ภาพรวมระบบ', icon: LayoutDashboard },
     { href: '/admin/orders', label: 'คำสั่งซื้อ & สลิป', icon: Package },
     { href: '/admin/buying-list', label: '✨ รายการซื้อที่ญี่ปุ่น', icon: CheckSquare, badge: 'Japan' },
+    { href: '/admin/customers', label: '👥 รายชื่อลูกค้า & สมาชิก', icon: UserCheck },
     { href: '/admin/products', label: 'จัดการสินค้า & หมวดหมู่', icon: ShoppingBag },
     { href: '/admin/flight-rounds', label: 'กำหนดรอบบินกลับไทย', icon: Plane },
     { href: '/admin/promotions', label: 'โปรโมชั่น & แบนเนอร์', icon: Gift },
