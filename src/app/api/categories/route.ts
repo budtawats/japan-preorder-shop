@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { Category } from '@/types';
 
 // GET all categories
 export async function GET() {
   try {
-    const db = readDb();
+    const db = await readDbAsync();
     const categories = db.categories.sort((a, b) => a.displayOrder - b.displayOrder);
     return NextResponse.json({ categories });
   } catch (error: any) {
@@ -14,7 +14,7 @@ export async function GET() {
   }
 }
 
-// POST create or update categories (Admin only)
+// POST create category (Admin only)
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'กรุณากรอกชื่อหมวดหมู่' }, { status: 400 });
     }
 
-    const db = readDb();
+    const db = await readDbAsync();
     const newCat: Category = {
       id: `cat_${Date.now()}`,
       name: name.trim(),
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     };
 
     db.categories.push(newCat);
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({ success: true, category: newCat });
   } catch (error: any) {

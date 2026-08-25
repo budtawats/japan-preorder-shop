@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 // GET single order
@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { id } = params;
-    const db = readDb();
+    const db = await readDbAsync();
     const order = db.orders.find((o) => o.id === id || o.orderNumber === id);
 
     if (!order) {
@@ -31,7 +31,7 @@ export async function PUT(
     const user = await getCurrentUser();
     const { id } = params;
     const body = await request.json();
-    const db = readDb();
+    const db = await readDbAsync();
 
     const orderIndex = db.orders.findIndex((o) => o.id === id || o.orderNumber === id);
     if (orderIndex === -1) {
@@ -49,7 +49,7 @@ export async function PUT(
           status: 'pending_verification',
           updatedAt: new Date().toISOString(),
         };
-        writeDb(db);
+        await writeDb(db);
         return NextResponse.json({ success: true, order: db.orders[orderIndex] });
       }
     }
@@ -61,7 +61,7 @@ export async function PUT(
         ...body,
         updatedAt: new Date().toISOString(),
       };
-      writeDb(db);
+      await writeDb(db);
       return NextResponse.json({ success: true, order: db.orders[orderIndex] });
     }
 

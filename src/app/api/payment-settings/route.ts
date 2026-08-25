@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 // GET payment settings
 export async function GET() {
   try {
-    const db = readDb();
+    const db = await readDbAsync();
     return NextResponse.json({ paymentSettings: db.paymentSettings });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const db = readDb();
+    const db = await readDbAsync();
 
     db.paymentSettings = {
       ...db.paymentSettings,
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       freeShippingMinAmount: body.freeShippingMinAmount !== undefined ? Number(body.freeShippingMinAmount) : db.paymentSettings.freeShippingMinAmount,
     };
 
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({ success: true, paymentSettings: db.paymentSettings });
   } catch (error: any) {

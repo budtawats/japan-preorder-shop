@@ -196,6 +196,7 @@ export default function AdminProductsPage() {
     if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?')) return;
 
     try {
+      setProducts((prev) => prev.filter((p) => p.id !== productId));
       const res = await fetch(`/api/products/${productId}`, {
         method: 'DELETE',
       });
@@ -203,6 +204,7 @@ export default function AdminProductsPage() {
       fetchData();
     } catch (err: any) {
       alert(err.message || 'เกิดข้อผิดพลาดในการลบ');
+      fetchData();
     }
   };
 

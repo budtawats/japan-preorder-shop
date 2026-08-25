@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { FlightRound } from '@/types';
 
 // GET flight rounds (all, or active one)
 export async function GET() {
   try {
-    const db = readDb();
+    const db = await readDbAsync();
     return NextResponse.json({
       flightRounds: db.flightRounds,
       activeRound: db.flightRounds.find((r) => r.status === 'active') || null,
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = readDb();
+    const db = await readDbAsync();
 
     // If new round is active, set other rounds to closed
     if (status === 'active') {
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     };
 
     db.flightRounds.unshift(newRound);
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({ success: true, flightRound: newRound });
   } catch (error: any) {

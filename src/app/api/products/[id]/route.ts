@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 // PUT update product (Admin only)
@@ -15,7 +15,7 @@ export async function PUT(
 
     const { id } = params;
     const body = await request.json();
-    const db = readDb();
+    const db = await readDbAsync();
 
     const productIndex = db.products.findIndex((p) => p.id === id);
     if (productIndex === -1) {
@@ -35,7 +35,7 @@ export async function PUT(
       inStock: updatedStockStatus !== 'out_of_stock',
     };
 
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({ success: true, product: db.products[productIndex] });
   } catch (error: any) {
@@ -55,7 +55,7 @@ export async function DELETE(
     }
 
     const { id } = params;
-    const db = readDb();
+    const db = await readDbAsync();
 
     const filtered = db.products.filter((p) => p.id !== id);
     if (filtered.length === db.products.length) {
@@ -63,7 +63,7 @@ export async function DELETE(
     }
 
     db.products = filtered;
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({ success: true, message: 'ลบสินค้าเรียบร้อยแล้ว' });
   } catch (error: any) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 // PUT update promotion
@@ -15,7 +15,7 @@ export async function PUT(
 
     const { id } = params;
     const body = await request.json();
-    const db = readDb();
+    const db = await readDbAsync();
 
     const promoIndex = db.promotions.findIndex((p) => p.id === id);
     if (promoIndex === -1) {
@@ -29,7 +29,7 @@ export async function PUT(
       code: body.code ? body.code.trim().toUpperCase() : undefined,
     };
 
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({ success: true, promotion: db.promotions[promoIndex] });
   } catch (error: any) {
@@ -49,7 +49,7 @@ export async function DELETE(
     }
 
     const { id } = params;
-    const db = readDb();
+    const db = await readDbAsync();
 
     const filtered = db.promotions.filter((p) => p.id !== id);
     if (filtered.length === db.promotions.length) {
@@ -57,7 +57,7 @@ export async function DELETE(
     }
 
     db.promotions = filtered;
-    writeDb(db);
+    await writeDb(db);
 
     return NextResponse.json({ success: true, message: 'ลบโปรโมชั่นเรียบร้อยแล้ว' });
   } catch (error: any) {
