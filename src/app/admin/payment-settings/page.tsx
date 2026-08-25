@@ -37,7 +37,9 @@ export default function AdminPaymentSettingsPage() {
     async function fetchSettings() {
       try {
         setLoading(true);
-        const res = await fetch('/api/payment-settings');
+        const res = await fetch(`/api/payment-settings?_t=${Date.now()}`, {
+          cache: 'no-store',
+        });
         const data = await res.json();
         if (data.paymentSettings) {
           const s = data.paymentSettings;

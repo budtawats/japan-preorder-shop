@@ -132,8 +132,9 @@ export default {
           // 6. PAYMENT SETTINGS SYNC
           if (body.paymentSettings) {
             const pay = body.paymentSettings;
+            await env.DB.prepare('DELETE FROM payment_settings').run();
             await env.DB.prepare(`
-              INSERT OR REPLACE INTO payment_settings (id, prompt_pay_number, prompt_pay_name, bank_name, account_number, account_name, qr_image_url, note, shipping_fee, free_shipping_min_amount)
+              INSERT INTO payment_settings (id, prompt_pay_number, prompt_pay_name, bank_name, account_number, account_name, qr_image_url, note, shipping_fee, free_shipping_min_amount)
               VALUES ('default', ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).bind(
               pay.promptPayNumber || '',
@@ -151,8 +152,9 @@ export default {
           // 7. SHOP SETTINGS SYNC
           if (body.shopSettings) {
             const s = body.shopSettings;
+            await env.DB.prepare('DELETE FROM shop_settings').run();
             await env.DB.prepare(`
-              INSERT OR REPLACE INTO shop_settings (id, shop_name, tagline, logo_url, theme_color, phone, line_id, line_url, facebook_url, instagram_url, support_hours, shop_address, top_announcement)
+              INSERT INTO shop_settings (id, shop_name, tagline, logo_url, theme_color, phone, line_id, line_url, facebook_url, instagram_url, support_hours, shop_address, top_announcement)
               VALUES ('default', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).bind(
               s.shopName || 'KOI Japan Shop',
@@ -231,13 +233,13 @@ export default {
           })),
           flightRounds: roundRes.results || [],
           paymentSettings: {
-            promptPayNumber: rawPay.prompt_pay_number || '0812345678',
-            promptPayName: rawPay.prompt_pay_name || 'KOI Japan Shop',
-            bankName: rawPay.bank_name || 'ธนาคารกสิกรไทย (K-Bank)',
-            accountNumber: rawPay.account_number || '123-4-56789-0',
-            accountName: rawPay.account_name || 'KOI Japan Shop',
+            promptPayNumber: rawPay.prompt_pay_number !== undefined ? rawPay.prompt_pay_number : '0812345678',
+            promptPayName: rawPay.prompt_pay_name !== undefined ? rawPay.prompt_pay_name : 'KOI Japan Shop',
+            bankName: rawPay.bank_name !== undefined ? rawPay.bank_name : 'ธนาคารกสิกรไทย (K-Bank)',
+            accountNumber: rawPay.account_number !== undefined ? rawPay.account_number : '123-4-56789-0',
+            accountName: rawPay.account_name !== undefined ? rawPay.account_name : 'KOI Japan Shop',
             qrImageUrl: rawPay.qr_image_url || 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=00020101021129370016A000000677010111011300668123456785802TH53037646304',
-            note: rawPay.note || 'เมื่อโอนเงินแล้ว กรุณาแนบรูปสลิปหลักฐานการโอนเงินเพื่อความรวดเร็วในการตรวจสอบ',
+            note: rawPay.note !== undefined ? rawPay.note : 'เมื่อโอนเงินแล้ว กรุณาแนบรูปสลิปหลักฐานการโอนเงินเพื่อความรวดเร็วในการตรวจสอบ',
             shippingFee: rawPay.shipping_fee ?? 50,
             freeShippingMinAmount: rawPay.free_shipping_min_amount ?? 1000,
           },
