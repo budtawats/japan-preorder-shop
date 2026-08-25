@@ -14,6 +14,8 @@ import {
   ArrowRight,
   CheckCircle,
   AlertCircle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export default function AuthPage() {
@@ -29,11 +31,13 @@ export default function AuthPage() {
   // Form states for login
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // Form states for customer registration (6 exact fields)
   const [fullName, setFullName] = useState('');
   const [regUsername, setRegUsername] = useState('');
   const [regPassword, setRegPassword] = useState('');
+  const [showRegPassword, setShowRegPassword] = useState(false);
   const [phone, setPhone] = useState('');
   const [lineId, setLineId] = useState('');
   const [address, setAddress] = useState('');
@@ -129,7 +133,7 @@ export default function AuthPage() {
           <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl mx-auto shadow-inner">
             🇯🇵
           </div>
-          <h1 className="text-xl sm:text-2xl font-black">Japan Pre-Order Shop</h1>
+          <h1 className="text-xl sm:text-2xl font-black">KOI Japan Shop</h1>
           <p className="text-xs text-rose-100">
             ระบบสั่งซื้อและจัดการสินค้าพรีออเดอร์จากญี่ปุ่น
           </p>
@@ -259,14 +263,24 @@ export default function AuthPage() {
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   รหัสผ่าน (Password)
                 </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="กรอกรหัสผ่านแม่ค้า"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-gray-900"
-                />
+                <div className="relative">
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    required
+                    placeholder="กรอกรหัสผ่านแม่ค้า"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    className="w-full pl-4 pr-11 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-gray-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors p-1"
+                    title={showLoginPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+                  >
+                    {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -301,14 +315,24 @@ export default function AuthPage() {
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   รหัสผ่าน (Password)
                 </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="กรอกรหัสผ่านของคุณ"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-rose-500"
-                />
+                <div className="relative">
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    required
+                    placeholder="กรอกรหัสผ่านของคุณ"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    className="w-full pl-4 pr-11 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-rose-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors p-1"
+                    title={showLoginPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+                  >
+                    {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -376,14 +400,24 @@ export default function AuthPage() {
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   3. รหัสผ่าน (Password) <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="กำหนดรหัสผ่านสำหรับเข้าสู่ระบบ"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-rose-500"
-                />
+                <div className="relative">
+                  <input
+                    type={showRegPassword ? 'text' : 'password'}
+                    required
+                    placeholder="กำหนดรหัสผ่านสำหรับเข้าสู่ระบบ"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    className="w-full pl-4 pr-11 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-rose-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegPassword(!showRegPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors p-1"
+                    title={showRegPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+                  >
+                    {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               {/* 4. Phone */}
