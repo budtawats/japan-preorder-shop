@@ -46,6 +46,9 @@ export default {
           if (body.shopSettings) {
             statements.push(env.DB.prepare('DELETE FROM shop_settings;'));
           }
+          if (body.users) {
+            statements.push(env.DB.prepare("DELETE FROM users WHERE role = 'customer';"));
+          }
 
           // 2. INSERT PARENT TABLES (Categories)
           if (body.categories && Array.isArray(body.categories)) {

@@ -16,6 +16,7 @@ import {
   UserCheck,
   ArrowUpDown,
   RefreshCw,
+  Trash2,
 } from 'lucide-react';
 
 interface CustomerData {
@@ -36,6 +37,7 @@ export default function AdminCustomersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchCustomers = async () => {
     try {
@@ -60,6 +62,30 @@ export default function AdminCustomersPage() {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleDeleteCustomer = async (cust: CustomerData) => {
+    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีลูกค้า "${cust.fullName}" (@${cust.username}) ออกจากระบบ?`)) {
+      return;
+    }
+
+    try {
+      setDeletingId(cust.id);
+      setCustomers((prev) => prev.filter((c) => c.id !== cust.id));
+
+      const res = await fetch(`/api/customers/${cust.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'ลบลูกค้าไม่สำเร็จ');
+
+      fetchCustomers();
+    } catch (err: any) {
+      alert(err.message || 'เกิดข้อผิดพลาดในการลบลูกค้า');
+      fetchCustomers();
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   // Filter customers by search
@@ -170,7 +196,7 @@ export default function AdminCustomersPage() {
                 key={c.id}
                 className="bg-white rounded-3xl p-5 sm:p-6 border border-rose-100 shadow-xs hover:shadow-md transition-shadow space-y-4 flex flex-col justify-between"
               >
-                {/* Header: Name + Username */}
+                {/* Header: Name + Username + Delete */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-red-400 text-white font-black text-lg flex items-center justify-center shadow-xs">
@@ -182,9 +208,20 @@ export default function AdminCustomersPage() {
                     </div>
                   </div>
 
-                  <span className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full text-[11px] font-bold border border-rose-100 shrink-0">
-                    🛍️ {c.orderCount} ออเดอร์
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full text-[11px] font-bold border border-rose-100 shrink-0">
+                      🛍️ {c.orderCount} ออเดอร์
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCustomer(c)}
+                      disabled={deletingId === c.id}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                      title="ลบข้อมูลลูกค้านี้"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Contact Info & Address */}
