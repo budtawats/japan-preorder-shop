@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { Product, ProductStockStatus } from '@/types';
 
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const promoOnly = searchParams.get('promoOnly');
     const stockStatus = searchParams.get('stockStatus');
 
-    const db = readDb();
+    const db = await readDbAsync();
     let products = [...db.products];
 
     if (categoryId && categoryId !== 'all') {

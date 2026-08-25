@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { User, UserRole } from '@/types';
-import { readDb } from './db';
+import { readDbAsync } from './db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'japan_preorder_super_secret_key_2026';
 const AUTH_COOKIE_NAME = 'jp_shop_auth_token';
@@ -39,7 +39,7 @@ export async function getCurrentUser(): Promise<User | null> {
   const payload = verifyToken(token);
   if (!payload) return null;
 
-  const db = readDb();
+  const db = await readDbAsync();
   const user = db.users.find((u) => u.id === payload.userId);
   return user || null;
 }

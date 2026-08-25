@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 // GET shop settings (Public)
 export async function GET() {
   try {
-    const db = readDb();
+    const db = await readDbAsync();
     return NextResponse.json({ shopSettings: db.shopSettings });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const db = readDb();
+    const db = await readDbAsync();
 
     db.shopSettings = {
       ...db.shopSettings,

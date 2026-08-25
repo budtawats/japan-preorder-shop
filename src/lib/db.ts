@@ -23,6 +23,7 @@ export interface DatabaseData {
   orders: Order[];
 }
 
+const CLOUDFLARE_D1_API = 'https://japan-preorder-shop.budtawat-s.workers.dev/api/db/sync';
 const isVercel = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 const BUNDLED_DB_FILE = path.join(process.cwd(), 'data', 'db.json');
 const DATA_DIR = isVercel ? '/tmp' : path.join(process.cwd(), 'data');
@@ -295,10 +296,46 @@ export function readDb(): DatabaseData {
   }
 }
 
+export async function readDbAsync(): Promise<DatabaseData> {
+  // Try fetching fresh data from Cloudflare D1 first
+  try {
+    const res = await fetch(CLOUDFLARE_D1_API, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+    if (res.ok) {
+      const data: DatabaseData = await res.json();
+      if (data && data.users && data.users.length > 0) {
+        // Cache to local file
+        try {
+          fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+        } catch (e) {}
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn('Cloudflare D1 sync fallback to local cache:', err);
+  }
+
+  return readDb();
+}
+
 export function writeDb(data: DatabaseData): void {
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
   } catch (error) {
-    console.error('Error writing DB:', error);
+    console.error('Error writing local DB:', error);
+  }
+
+  // Push updates to Cloudflare D1 asynchronously
+  try {
+    fetch(CLOUDFLARE_D1_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).catch((e) => console.warn('D1 write sync error:', e));
+  } catch (err) {
+    // Ignore async error
   }
 }

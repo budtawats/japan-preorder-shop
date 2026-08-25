@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 // PUT update profile and/or change password
@@ -14,7 +14,7 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const { fullName, username, phone, lineId, address, currentPassword, newPassword } = body;
 
-    const db = readDb();
+    const db = await readDbAsync();
     const userIndex = db.users.findIndex((u) => u.id === currentUser.id);
     if (userIndex === -1) {
       return NextResponse.json({ error: 'ไม่พบบัญชีผู้ใช้' }, { status: 404 });

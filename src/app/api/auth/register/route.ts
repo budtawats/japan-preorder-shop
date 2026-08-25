@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { signToken, AUTH_COOKIE_NAME } from '@/lib/auth';
 import { User } from '@/types';
 
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = readDb();
+    const db = await readDbAsync();
     const cleanUsername = username.trim().toLowerCase();
     const cleanPhone = phone.trim();
 

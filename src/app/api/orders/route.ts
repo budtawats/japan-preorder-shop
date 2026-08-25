@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { readDb, writeDb } from '@/lib/db';
+import { readDbAsync, writeDb } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { Order, OrderItem } from '@/types';
 
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const status = searchParams.get('status');
     const flightRoundId = searchParams.get('flightRoundId');
 
-    const db = readDb();
+    const db = await readDbAsync();
     let orders = [...db.orders];
 
     // If customer, only show their orders
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = readDb();
+    const db = await readDbAsync();
 
     // Calculate subtotal from current product prices
     let subtotal = 0;
