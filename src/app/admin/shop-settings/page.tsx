@@ -48,6 +48,7 @@ export default function AdminShopSettingsPage() {
   const [supportHours, setSupportHours] = useState('');
   const [shopAddress, setShopAddress] = useState('');
   const [topAnnouncement, setTopAnnouncement] = useState('');
+  const [announcementBadge, setAnnouncementBadge] = useState('');
 
   useEffect(() => {
     async function fetchSettings() {
@@ -69,6 +70,7 @@ export default function AdminShopSettingsPage() {
           setSupportHours(s.supportHours || '');
           setShopAddress(s.shopAddress || '');
           setTopAnnouncement(s.topAnnouncement || '');
+          setAnnouncementBadge(s.announcementBadge || 'JAPAN PRE-ORDER 🇯🇵');
         }
       } catch (err) {
         console.error('Error loading shop settings:', err);
@@ -123,6 +125,7 @@ export default function AdminShopSettingsPage() {
         supportHours,
         shopAddress,
         topAnnouncement,
+        announcementBadge,
       };
 
       const res = await fetch('/api/shop-settings', {
@@ -132,77 +135,79 @@ export default function AdminShopSettingsPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'บันทึกข้อมูลไม่สำเร็จ');
+      if (!res.ok) throw new Error(data.error || 'บันทึกการตั้งค่าร้านค้าไม่สำเร็จ');
 
-      setSuccessMsg('บันทึกข้อมูลร้านค้า โลโก้ และธีมสีเว็บเรียบร้อยแล้ว!');
-      setTimeout(() => setSuccessMsg(null), 3500);
+      setSuccessMsg('บันทึกข้อมูลร้านค้าเรียบร้อยแล้ว!');
+      setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการบันทึก');
+      alert(err.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
       setIsSaving(false);
     }
   };
 
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="py-20 text-center text-gray-500">กำลังโหลดการตั้งค่าร้านค้า...</div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
-      <div className="max-w-4xl space-y-6">
+      <div className="space-y-6 max-w-4xl mx-auto">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-2">
-            <Store className="w-8 h-8 text-rose-600" />
-            ข้อมูลร้านค้า, โลโก้ & โทนสีเว็บไซต์
-          </h1>
-          <p className="text-xs text-gray-500 mt-1">
-            ปรับแต่งโลโก้ร้านค้า โทนสีหลักของเว็บไซต์ ชื่อร้าน สโลแกน และช่องทางการติดต่อของผู้ขาย
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-2">
+              <Store className="w-8 h-8 text-rose-600" />
+              ข้อมูลร้านค้า & ช่องทางติดต่อ
+            </h1>
+            <p className="text-xs text-gray-500 mt-1">
+              ปรับแต่งชื่อร้าน สโลแกน โทนสี ธีมร้าน โลโก้ และข้อความประกาศด้านบนสุดของเว็บ
+            </p>
+          </div>
         </div>
 
         {successMsg && (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-700 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
-            <CheckCircle className="w-5 h-5 shrink-0" />
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center gap-2 text-sm font-semibold animate-fadeIn shadow-xs">
+            <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
         <form onSubmit={handleSave} className="space-y-6">
-          {/* Section 1: Logo & Theme Color (New Feature) */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm space-y-5 text-xs sm:text-sm">
+          {/* Section 1: Brand & Theme Color */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm space-y-6 text-xs sm:text-sm">
             <h3 className="text-base font-bold text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
-              <Palette className="w-5 h-5 text-rose-600" />
-              โลโก้ร้านค้า & โทนสีของเว็บไซต์ (Theme & Branding)
+              <Palette className="w-5 h-5 text-rose-500" />
+              เอกลักษณ์และธีมสีของร้านค้า (Theme & Branding)
             </h3>
 
-            {/* Logo Upload Box */}
-            <div className="space-y-3">
+            {/* Logo Upload */}
+            <div className="space-y-2">
               <label className="block font-bold text-gray-700">
                 โลโก้ร้านค้า (Shop Logo)
               </label>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-200">
-                {/* Logo Preview */}
-                <div className="relative w-20 h-20 rounded-2xl bg-white border border-gray-300 shadow-xs flex items-center justify-center overflow-hidden shrink-0">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
                   {logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt="Logo Preview"
-                      className="w-full h-full object-contain p-1"
-                    />
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-gray-400 text-center p-2">
-                      <ImageIcon className="w-6 h-6 mb-1 text-gray-300" />
-                      <span className="text-[10px]">ไม่มีโลโก้</span>
-                    </div>
+                    <ImageIcon className="w-8 h-8 text-gray-300" />
                   )}
                 </div>
 
-                {/* Upload & URL Inputs */}
-                <div className="flex-1 space-y-2 w-full">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label className="px-4 py-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs">
-                      <Upload className="w-4 h-4" />
-                      <span>{uploadingLogo ? 'กำลังอัปโหลด...' : 'อัปโหลดไฟล์รูปภาพโลโก้'}</span>
+                <div className="space-y-2 w-full">
+                  <div className="flex items-center gap-2">
+                    <label className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-semibold cursor-pointer text-xs flex items-center gap-1.5 transition-colors">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{uploadingLogo ? 'กำลังอัปโหลด...' : 'อัปโหลดรูปโลโก้'}</span>
                       <input
                         type="file"
                         accept="image/*"
+                        disabled={uploadingLogo}
                         onChange={handleLogoUpload}
                         className="hidden"
                       />
@@ -211,31 +216,24 @@ export default function AdminShopSettingsPage() {
                       <button
                         type="button"
                         onClick={() => setLogoUrl('')}
-                        className="px-3 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1"
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                        title="ลบโลโก้"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>ลบโลโก้</span>
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     )}
                   </div>
-                  <input
-                    type="text"
-                    placeholder="หรือวาง URL รูปภาพโลโก้ที่นี่ (เช่น https://.../logo.png)"
-                    value={logoUrl}
-                    onChange={(e) => setLogoUrl(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-rose-500 text-xs font-mono"
-                  />
                   <p className="text-[11px] text-gray-400">
-                    แนะนำรูปทรงสี่เหลี่ยมจัตุรัส หรือวงกลม ขนาด 200x200px ขึ้นไป (ไฟล์ PNG/JPG)
+                    แนะนำรูปสี่เหลี่ยมจัตุรัส ขนาด 500x500px ไฟล์ PNG หรือ JPG
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Theme Color Picker */}
-            <div className="space-y-3 pt-2">
+            {/* Theme Color Selector */}
+            <div className="space-y-2 pt-2 border-t border-gray-100">
               <label className="block font-bold text-gray-700">
-                โทนสีหลักของเว็บไซต์ (Website Theme Color)
+                โทนสีหลักของร้านค้า (Theme Color)
               </label>
               <p className="text-xs text-gray-500">
                 เลือกชุดสีที่เข้ากับแบรนด์ร้านค้าของคุณ ระบบจะปรับสีปุ่ม แถบประกาศ และส่วนเน้นต่างๆ ให้เข้ากันทั้งเว็บ
@@ -306,7 +304,7 @@ export default function AdminShopSettingsPage() {
                 <input
                   type="text"
                   required
-                  placeholder="เช่น Japan Pre-Order Shop"
+                  placeholder="เช่น KOI Japan Shop"
                   value={shopName}
                   onChange={(e) => setShopName(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-rose-500"
@@ -315,16 +313,32 @@ export default function AdminShopSettingsPage() {
 
               <div>
                 <label className="block font-bold text-gray-700 mb-1">
-                  ข้อความแถบประกาศด้านบนสุด (Top Banner)
+                  ข้อความป้ายหัวข้อประกาศบนสุด (Banner Badge)
                 </label>
                 <input
                   type="text"
-                  placeholder="เช่น รับหิ้วสินค้าญี่ปุ่นของแท้ 100% บินเอง ส่งตรงถึงบ้านคุณ 🇯🇵"
-                  value={topAnnouncement}
-                  onChange={(e) => setTopAnnouncement(e.target.value)}
+                  placeholder="เช่น JAPAN PRE-ORDER 🇯🇵 หรือ KOI JAPAN 🇯🇵"
+                  value={announcementBadge}
+                  onChange={(e) => setAnnouncementBadge(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-rose-500"
                 />
+                <span className="text-[11px] text-gray-400 mt-1 block">
+                  ข้อความในกรอบป้ายเล็กๆ ด้านหน้าแถบประกาศบนสุด (เช่น JAPAN PRE-ORDER 🇯🇵)
+                </span>
               </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-gray-700 mb-1">
+                ข้อความแถบประกาศยาวด้านบนสุด (Top Banner Announcement)
+              </label>
+              <input
+                type="text"
+                placeholder="เช่น รับหิ้วสินค้าญี่ปุ่นของแท้ 100% บินเอง ส่งตรงถึงบ้านคุณ 🇯🇵"
+                value={topAnnouncement}
+                onChange={(e) => setTopAnnouncement(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-rose-500"
+              />
             </div>
 
             <div>

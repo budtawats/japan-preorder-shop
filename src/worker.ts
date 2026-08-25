@@ -186,10 +186,15 @@ export default {
           // 8. SHOP SETTINGS SYNC
           if (body.shopSettings) {
             const s = body.shopSettings;
+            try {
+              await env.DB.prepare('ALTER TABLE shop_settings ADD COLUMN announcement_badge TEXT;').run();
+            } catch (e) {
+              // ignore if already exists
+            }
             statements.push(
               env.DB.prepare(`
-                INSERT INTO shop_settings (id, shop_name, tagline, logo_url, theme_color, phone, line_id, line_url, facebook_url, instagram_url, support_hours, shop_address, top_announcement)
-                VALUES ('default', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO shop_settings (id, shop_name, tagline, logo_url, theme_color, phone, line_id, line_url, facebook_url, instagram_url, support_hours, shop_address, top_announcement, announcement_badge)
+                VALUES ('default', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
               `).bind(
                 s.shopName || 'KOI Japan Shop',
                 s.tagline || '',
@@ -202,7 +207,8 @@ export default {
                 s.instagramUrl || '',
                 s.supportHours || '',
                 s.shopAddress || '',
-                s.topAnnouncement || ''
+                s.topAnnouncement || '',
+                s.announcementBadge || 'JAPAN PRE-ORDER 🇯🇵'
               )
             );
           }
@@ -298,6 +304,7 @@ export default {
             supportHours: rawShop.support_hours || 'เปิดรับคำสั่งซื้อตลอด 24 ชม. • ตอบแชททุกวัน 09:00 - 22:00 น.',
             shopAddress: rawShop.shop_address || 'กรุงเทพมหานคร ประเทศไทย (พร้อมจัดส่งทั่วประเทศ)',
             topAnnouncement: rawShop.top_announcement || 'KOI Japan Shop รับหิ้วสินค้าญี่ปุ่นของแท้ 100% บินเอง ส่งตรงถึงบ้านคุณ 🇯🇵🌸',
+            announcementBadge: rawShop.announcement_badge || 'JAPAN PRE-ORDER 🇯🇵',
           },
           promotions: (promoRes.results || []).map((pr: any) => ({
             ...pr,

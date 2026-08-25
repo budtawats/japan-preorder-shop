@@ -73,6 +73,7 @@ export interface ShopSettings {
   supportHours: string;
   shopAddress: string;
   topAnnouncement: string;
+  announcementBadge?: string;
 }
 
 export interface Promotion {

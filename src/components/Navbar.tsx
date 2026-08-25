@@ -49,7 +49,7 @@ export default function Navbar() {
         style={{ backgroundColor: themeColor }}
       >
         <span className="bg-white/20 px-2 py-0.5 rounded text-[11px] font-bold tracking-wider">
-          JAPAN PRE-ORDER 🇯🇵
+          {shopSettings?.announcementBadge || 'JAPAN PRE-ORDER 🇯🇵'}
         </span>
         <span>
           {shopSettings?.topAnnouncement || 'รับหิ้วสินค้าญี่ปุ่นของแท้ 100% บินเอง ส่งตรงถึงบ้านคุณ'}
