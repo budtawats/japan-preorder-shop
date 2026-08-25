@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     const validStockStatus: ProductStockStatus =
       stockStatus || (inStock === false ? 'out_of_stock' : 'preorder');
 
-    const db = readDb();
+    const db = await readDbAsync();
     const newProduct: Product = {
       id: `prod_${Date.now()}`,
       name: name.trim(),

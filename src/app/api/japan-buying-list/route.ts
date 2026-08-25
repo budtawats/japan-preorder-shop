@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { readDb } from '@/lib/db';
+import { readDbAsync } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(request: Request) {
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const flightRoundId = searchParams.get('flightRoundId');
 
-    const db = readDb();
+    const db = await readDbAsync();
 
     // Filter active orders that are paid or pending verification or purchased
     let relevantOrders = db.orders.filter(
