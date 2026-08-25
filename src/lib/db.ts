@@ -23,31 +23,33 @@ export interface DatabaseData {
   orders: Order[];
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
-const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads');
+const isVercel = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+const BUNDLED_DB_FILE = path.join(process.cwd(), 'data', 'db.json');
+const DATA_DIR = isVercel ? '/tmp' : path.join(process.cwd(), 'data');
+const DB_FILE = isVercel ? path.join('/tmp', 'db.json') : path.join(DATA_DIR, 'db.json');
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+try {
+  if (!isVercel && !fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch (e) {
+  // Ignore
 }
 
 function getInitialShopSettings(): ShopSettings {
   return {
-    shopName: 'Japan Pre-Order Shop',
+    shopName: 'KOI Japan Shop',
     tagline: 'บริการรับหิ้วและสั่งซื้อสินค้าจากประเทศญี่ปุ่น ขนม เครื่องสำอาง สกินแคร์ ฟิกเกอร์ ของแท้ 100% บินเองส่งไว',
     logoUrl: '',
     themeColor: '#E63946',
     phone: '081-234-5678',
-    lineId: '@japanpreorder',
-    lineUrl: 'https://line.me/ti/p/~@japanpreorder',
-    facebookUrl: 'https://facebook.com/japanpreordershop',
-    instagramUrl: 'https://instagram.com/japanpreordershop',
+    lineId: '@koijapanshop',
+    lineUrl: 'https://line.me/ti/p/~@koijapanshop',
+    facebookUrl: 'https://facebook.com/koijapanshop',
+    instagramUrl: 'https://instagram.com/koijapanshop',
     supportHours: 'เปิดรับคำสั่งซื้อตลอด 24 ชม. • ตอบแชททุกวัน 09:00 - 22:00 น.',
     shopAddress: 'กรุงเทพมหานคร ประเทศไทย (พร้อมจัดส่งทั่วประเทศ)',
-    topAnnouncement: 'รับหิ้วสินค้าญี่ปุ่นของแท้ 100% บินเอง ส่งตรงถึงบ้านคุณ 🇯🇵',
+    topAnnouncement: 'KOI Japan Shop รับหิ้วสินค้าญี่ปุ่นของแท้ 100% บินเอง ส่งตรงถึงบ้านคุณ 🇯🇵🌸',
   };
 }
 
@@ -64,8 +66,8 @@ function getInitialData(): DatabaseData {
         role: 'merchant',
         fullName: 'แม่ค้าใจดี (เจ้าของร้าน)',
         phone: '081-234-5678',
-        lineId: '@japanpreorder',
-        address: 'ร้าน Japan Pre-Order Shop กรุงเทพมหานคร',
+        lineId: '@koijapanshop',
+        address: 'ร้าน KOI Japan Shop กรุงเทพมหานคร',
         createdAt: new Date().toISOString(),
       },
       {
@@ -150,7 +152,7 @@ function getInitialData(): DatabaseData {
         categoryId: 'cat_vitamins',
         price: 220,
         originalPrice: 280,
-        description: 'ช่วยเสริมภูมิต้านทาน ป้องกันหวัด บำรุงผิวพรรณให้กระจ่างใสสุขภาพดี ทานง่าย วันละ 2 เม็ด',
+        description: 'ช่วยเสริมภูมิต้านทาน ผิวกระจ่างใส สุขภาพดี ทานวันละ 2 เม็ด หลังอาหารเช้า-เย็น',
         imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80',
         inStock: true,
         stockStatus: 'in_stock',
@@ -160,29 +162,30 @@ function getInitialData(): DatabaseData {
       },
       {
         id: 'prod_06',
-        name: 'Rohto Cool 40a ยาหยอดตาผสมวิตามิน เย็นสดชื่น ระดับ 5',
+        name: 'Rohto Cool 40a ยาหยอดตาผสมวิตามิน เย็นสดชื่นระดับ 5',
         categoryId: 'cat_lifestyle',
         price: 180,
         originalPrice: 220,
-        description: 'น้ำตาเทียมและยาหยอดตาผสมวิตามิน 4 ชนิด ช่วยบำรุงสายตาที่เมื่อยล้าจากการจ้องจอคอมพิวเตอร์และมือถือ',
+        description: 'บำรุงดวงตาเหนื่อยล้าจากการจ้องจอนานๆ มีวิตามิน 4 ชนิด ช่วยให้ดวงตาสดชื่น ผ่อนคลาย',
         imageUrl: 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=600&auto=format&fit=crop&q=80',
         inStock: false,
         stockStatus: 'out_of_stock',
         isPromo: false,
+        promoTag: '',
         createdAt: new Date().toISOString(),
       },
       {
         id: 'prod_07',
-        name: 'พวงกุญแจตุ๊กตา Sanrio Chiikawa / Hachiware ลิขสิทธิ์แท้',
+        name: 'ตุ๊กตาพวงกุญแจ Sanrio Chiikawa / Hachiware ลิขสิทธิ์แท้',
         categoryId: 'cat_figures',
         price: 550,
         originalPrice: 690,
-        description: 'ตุ๊กตาห้อยกระเป๋าน่ารักสุดฮิตจากญี่ปุ่น ลิขสิทธิ์แท้ 100% ขนนุ่มน่ากอด หิ้วสดจากช็อปโตเกียว',
+        description: 'พวงกุญแจตุ๊กตาขนนุ่ม นำเข้าจากร้าน Kiddyland โตเกียว ลิขสิทธิ์แท้ 100% หายากมาก',
         imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&auto=format&fit=crop&q=80',
         inStock: true,
         stockStatus: 'preorder',
         isPromo: true,
-        promoTag: '🎌 ลิขสิทธิ์แท้ญี่ปุ่น',
+        promoTag: '💖 ลิขสิทธิ์แท้',
         createdAt: new Date().toISOString(),
       },
     ],
@@ -194,16 +197,26 @@ function getInitialData(): DatabaseData {
         returnDate: '2026-09-15',
         shippingStartDate: '2026-09-17',
         status: 'active',
-        note: 'แม่ค้าบินไปหิ้วด้วยตัวเอง การันตีของแท้ 100% จากช็อปญี่ปุ่น สินค้าแพ็คกันกระแทกอย่างดีทุกกล่อง',
+        note: 'แม่ค้าเดินทางไปหิ้วสินค้าด้วยตัวเอง รับประกันของแท้ทุกชิ้นจากญี่ปุ่น 100%',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'round_02',
+        roundName: 'รอบบินฟุกุโอกะ 🍁 (เปิดรับล่วงหน้า)',
+        orderCloseDate: '2026-10-05',
+        returnDate: '2026-10-10',
+        shippingStartDate: '2026-10-12',
+        status: 'upcoming',
+        note: 'เน้นขนมราเม็งฮากาตะ และสกินแคร์ชื่อดังจากคิวชู',
         createdAt: new Date().toISOString(),
       },
     ],
     paymentSettings: {
       promptPayNumber: '0812345678',
-      promptPayName: 'น.ส. สุชาวดี (Japan Pre-Order)',
+      promptPayName: 'KOI Japan Shop',
       bankName: 'ธนาคารกสิกรไทย (K-Bank)',
       accountNumber: '123-4-56789-0',
-      accountName: 'น.ส. สุชาวดี มีโชค',
+      accountName: 'KOI Japan Shop',
       qrImageUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=00020101021129370016A000000677010111011300668123456785802TH53037646304',
       note: 'เมื่อโอนเงินแล้ว กรุณาแนบรูปสลิปหลักฐานการโอนเงินเพื่อความรวดเร็วในการตรวจสอบและยืนยันออเดอร์',
       shippingFee: 50,
@@ -233,58 +246,33 @@ function getInitialData(): DatabaseData {
         createdAt: new Date().toISOString(),
       },
     ],
-    orders: [
-      {
-        id: 'ord_demo_01',
-        orderNumber: 'JP20260901-001',
-        userId: 'user_cust_01',
-        customerName: 'สมชาย รักญี่ปุ่น',
-        customerPhone: '089-999-8888',
-        customerLineId: 'somchai_jp',
-        shippingAddress: '123/45 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110',
-        items: [
-          {
-            productId: 'prod_01',
-            productName: 'Tokyo Banana ขนมเค้กกล้วยยอดฮิต (กล่อง 8 ชิ้น)',
-            price: 490,
-            quantity: 2,
-            imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=600&auto=format&fit=crop&q=80',
-          },
-          {
-            productId: 'prod_05',
-            productName: 'DHC Vitamin C วิตามินซีเข้มข้น 1000mg สำหรับ 60 วัน',
-            price: 220,
-            quantity: 1,
-            imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80',
-          },
-        ],
-        subtotal: 1200,
-        discount: 50,
-        shippingFee: 0,
-        totalAmount: 1150,
-        paymentSlipUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=80',
-        status: 'paid',
-        flightRoundId: 'round_01',
-        flightRoundName: 'รอบบินโตเกียว & โอซาก้า 🌸',
-        note: 'ขอขนมวันหมดอายุไกลๆ นะครับ ขอบคุณครับ',
-        createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ],
+    orders: [],
   };
 }
 
 export function readDb(): DatabaseData {
   try {
     if (!fs.existsSync(DB_FILE)) {
-      const initial = getInitialData();
-      fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), 'utf-8');
+      let initial: DatabaseData;
+      if (fs.existsSync(BUNDLED_DB_FILE)) {
+        try {
+          initial = JSON.parse(fs.readFileSync(BUNDLED_DB_FILE, 'utf-8'));
+        } catch (e) {
+          initial = getInitialData();
+        }
+      } else {
+        initial = getInitialData();
+      }
+      try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), 'utf-8');
+      } catch (err) {
+        // Ignore in read-only environment
+      }
       return initial;
     }
     const content = fs.readFileSync(DB_FILE, 'utf-8');
     const data: DatabaseData = JSON.parse(content);
 
-    // Ensure shopSettings exist with logoUrl and themeColor
     if (!data.shopSettings) {
       data.shopSettings = getInitialShopSettings();
     } else {
@@ -292,7 +280,6 @@ export function readDb(): DatabaseData {
       if (data.shopSettings.logoUrl === undefined) data.shopSettings.logoUrl = '';
     }
 
-    // Normalize products stockStatus
     if (data.products) {
       data.products.forEach((p) => {
         if (!p.stockStatus) {
@@ -313,6 +300,5 @@ export function writeDb(data: DatabaseData): void {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
   } catch (error) {
     console.error('Error writing DB:', error);
-    throw error;
   }
 }
