@@ -51,8 +51,8 @@ export default function AdminPaymentSettingsPage() {
           setAccountName(s.accountName || '');
           setQrImageUrl(s.qrImageUrl || '');
           setNote(s.note || '');
-          setShippingFee(s.shippingFee ?? 50);
-          setFreeShippingMinAmount(s.freeShippingMinAmount ?? 1000);
+          setShippingFee(s.shippingFee !== undefined && s.shippingFee !== null ? Number(s.shippingFee) : 0);
+          setFreeShippingMinAmount(s.freeShippingMinAmount !== undefined && s.freeShippingMinAmount !== null ? Number(s.freeShippingMinAmount) : '');
         }
       } catch (err) {
         console.error('Error loading payment settings:', err);
@@ -103,8 +103,8 @@ export default function AdminPaymentSettingsPage() {
         accountName,
         qrImageUrl,
         note,
-        shippingFee: Number(shippingFee || 0),
-        freeShippingMinAmount: freeShippingMinAmount ? Number(freeShippingMinAmount) : undefined,
+        shippingFee: shippingFee !== '' && shippingFee !== undefined ? Number(shippingFee) : 0,
+        freeShippingMinAmount: freeShippingMinAmount !== '' && freeShippingMinAmount !== undefined ? Number(freeShippingMinAmount) : undefined,
       };
 
       const res = await fetch('/api/payment-settings', {

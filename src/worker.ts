@@ -173,9 +173,9 @@ export default {
                 pay.accountNumber || '',
                 pay.accountName || '',
                 pay.qrImageUrl || '',
-                pay.note || '',
-                Number(pay.shippingFee) || 50,
-                pay.freeShippingMinAmount !== undefined ? Number(pay.freeShippingMinAmount) : 1000
+                pay.note !== undefined ? pay.note : '',
+                pay.shippingFee !== undefined && pay.shippingFee !== null ? Number(pay.shippingFee) : 0,
+                pay.freeShippingMinAmount !== undefined && pay.freeShippingMinAmount !== '' && pay.freeShippingMinAmount !== null ? Number(pay.freeShippingMinAmount) : null
               )
             );
           }
@@ -279,8 +279,8 @@ export default {
             accountName: rawPay.account_name !== undefined ? rawPay.account_name : 'KOI Japan Shop',
             qrImageUrl: rawPay.qr_image_url || 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=00020101021129370016A000000677010111011300668123456785802TH53037646304',
             note: rawPay.note !== undefined ? rawPay.note : 'เมื่อโอนเงินแล้ว กรุณาแนบรูปสลิปหลักฐานการโอนเงินเพื่อความรวดเร็วในการตรวจสอบ',
-            shippingFee: rawPay.shipping_fee ?? 50,
-            freeShippingMinAmount: rawPay.free_shipping_min_amount ?? 1000,
+            shippingFee: rawPay.shipping_fee !== undefined && rawPay.shipping_fee !== null ? Number(rawPay.shipping_fee) : 0,
+            freeShippingMinAmount: rawPay.free_shipping_min_amount !== undefined && rawPay.free_shipping_min_amount !== null ? Number(rawPay.free_shipping_min_amount) : 1000,
           },
           shopSettings: {
             shopName: rawShop.shop_name || 'KOI Japan Shop',

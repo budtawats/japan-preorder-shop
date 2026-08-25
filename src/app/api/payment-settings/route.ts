@@ -26,8 +26,8 @@ export async function POST(request: Request) {
     db.paymentSettings = {
       ...db.paymentSettings,
       ...body,
-      shippingFee: Number(body.shippingFee ?? db.paymentSettings.shippingFee),
-      freeShippingMinAmount: body.freeShippingMinAmount !== undefined ? Number(body.freeShippingMinAmount) : db.paymentSettings.freeShippingMinAmount,
+      shippingFee: body.shippingFee !== undefined ? Number(body.shippingFee) : (db.paymentSettings.shippingFee ?? 0),
+      freeShippingMinAmount: body.freeShippingMinAmount !== undefined && body.freeShippingMinAmount !== '' ? Number(body.freeShippingMinAmount) : undefined,
     };
 
     await writeDb(db);
