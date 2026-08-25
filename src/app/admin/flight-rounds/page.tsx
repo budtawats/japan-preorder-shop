@@ -117,6 +117,7 @@ export default function AdminFlightRoundsPage() {
   const handleDelete = async (roundId: string) => {
     if (!confirm('ต้องการลบรอบบินนี้หรือไม่?')) return;
     try {
+      setRounds((prev) => prev.filter((r) => r.id !== roundId));
       const res = await fetch(`/api/flight-rounds/${roundId}`, {
         method: 'DELETE',
       });
@@ -124,6 +125,7 @@ export default function AdminFlightRoundsPage() {
       fetchRounds();
     } catch (err: any) {
       alert(err.message || 'เกิดข้อผิดพลาด');
+      fetchRounds();
     }
   };
 

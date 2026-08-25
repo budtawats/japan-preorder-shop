@@ -118,11 +118,13 @@ export default function AdminPromotionsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('ต้องการลบโปรโมชั่นนี้หรือไม่?')) return;
     try {
+      setPromotions((prev) => prev.filter((p) => p.id !== id));
       const res = await fetch(`/api/promotions/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('ลบไม่สำเร็จ');
       fetchPromos();
     } catch (err: any) {
       alert(err.message || 'เกิดข้อผิดพลาด');
+      fetchPromos();
     }
   };
 
