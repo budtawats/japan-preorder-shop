@@ -55,8 +55,8 @@ function getInitialShopSettings(): ShopSettings {
 }
 
 function getInitialData(): DatabaseData {
-  const adminPasswordHash = bcrypt.hashSync('admin1234', 10);
-  const sampleCustomerHash = bcrypt.hashSync('123456', 10);
+  const adminPasswordHash = '$2a$10$EFLbWz/MMVX1qDTgoLisQuiqQMumSYxq2brpRLu/4P4RSib52AyBG';
+  const sampleCustomerHash = '$2a$10$q4vg8eGIx.ZXrwe4kyU9nuxgksurI0mVFXYshodYZ6b8j0LBObymO';
 
   return {
     users: [
