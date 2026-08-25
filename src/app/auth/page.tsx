@@ -235,15 +235,6 @@ export default function AuthPage() {
           {/* A. MERCHANT LOGIN FORM */}
           {role === 'merchant' && (
             <form onSubmit={handleLogin} className="space-y-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-800 space-y-1">
-                <p className="font-bold flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-amber-600" />
-                  เข้าสู่ระบบจัดการร้านค้าส่วนบุคคล (Admin)
-                </p>
-                <p className="text-[11px] text-amber-700">
-                  สำหรับเจ้าของร้านจัดการสินค้า รอบบิน และคำสั่งซื้อ (บัญชีตั้งต้น: <strong>admin</strong> / รหัสผ่าน: <strong>admin1234</strong>)
-                </p>
-              </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
