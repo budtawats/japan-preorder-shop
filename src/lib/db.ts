@@ -55,7 +55,7 @@ function getInitialShopSettings(): ShopSettings {
 }
 
 function getInitialData(): DatabaseData {
-  const adminPasswordHash = '$2a$10$EFLbWz/MMVX1qDTgoLisQuiqQMumSYxq2brpRLu/4P4RSib52AyBG';
+  const adminPasswordHash = '$2a$10$J1ruF0eq9qA1B03woOtXseE.pagp/YIHtJfb8RU6/eexZj7f3.NXq';
   const sampleCustomerHash = '$2a$10$q4vg8eGIx.ZXrwe4kyU9nuxgksurI0mVFXYshodYZ6b8j0LBObymO';
 
   return {
