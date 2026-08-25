@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { readDbAsync, writeDb } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, signToken, AUTH_COOKIE_NAME } from '@/lib/auth';
 
 // PUT update profile and/or change password
 export async function PUT(request: Request) {
@@ -20,7 +20,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'ไม่พบบัญชีผู้ใช้' }, { status: 404 });
     }
 
-    const user = db.users[userIndex];
+    const user = { ...db.users[userIndex] };
 
     // If changing username, ensure it's not taken by another user
     if (username && username.trim().toLowerCase() !== user.username.toLowerCase()) {
@@ -73,13 +73,26 @@ export async function PUT(request: Request) {
     db.users[userIndex] = user;
     await writeDb(db);
 
+    const token = signToken(user);
     const { passwordHash, ...safeUser } = user;
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'บันทึกข้อมูลเรียบร้อยแล้ว',
       user: safeUser,
+      token,
     });
+
+    response.cookies.set({
+      name: AUTH_COOKIE_NAME,
+      value: token,
+      httpOnly: true,
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+      sameSite: 'lax',
+    });
+
+    return response;
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล' },

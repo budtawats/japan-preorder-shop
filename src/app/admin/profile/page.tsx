@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminProfilePage() {
-  const { user, login: updateAuthUser } = useAuth();
+  const { user, login: updateAuthUser, refreshUser } = useAuth();
 
   // Profile Form States
   const [fullName, setFullName] = useState('');
@@ -40,6 +40,10 @@ export default function AdminProfilePage() {
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  useEffect(() => {
+    refreshUser();
+  }, []);
 
   useEffect(() => {
     if (user) {
